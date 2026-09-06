@@ -1,42 +1,53 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* ── Dark-First Design Tokens ─────────────────────────────────────────────── */
+/* ── Design Tokens ────────────────────────────────────────────────────────
+   Flat, restrained dark UI. Near-black background, muted neutral borders,
+   one understated accent (cool slate-blue). No glow, no shimmer.
+   ─────────────────────────────────────────────────────────────────────── */
 
 @layer base {
   :root {
-    --background: 0 0% 0%;
-    --foreground: 0 0% 98%;
+    --background: 0 0% 4%;
+    --foreground: 0 0% 93%;
 
-    --card: 0 0% 3%;
-    --card-foreground: 0 0% 98%;
+    --card: 0 0% 6%;
+    --card-foreground: 0 0% 93%;
 
-    --popover: 0 0% 3%;
-    --popover-foreground: 0 0% 98%;
+    --popover: 0 0% 6%;
+    --popover-foreground: 0 0% 93%;
 
-    --primary: 262 83% 58%;
-    --primary-foreground: 0 0% 98%;
-
-    --secondary: 0 0% 8%;
-    --secondary-foreground: 0 0% 98%;
-
-    --muted: 0 0% 8%;
-    --muted-foreground: 0 0% 60%;
-
-    --accent: 0 0% 8%;
+    /* Understated accent — cool slate-blue, not violet */
+    --accent: 210 30% 45%;
     --accent-foreground: 0 0% 98%;
+    --accent-hover: 210 30% 38%;
 
-    --destructive: 350 89% 60%;
+    --primary: 0 0% 93%;
+    --primary-foreground: 0 0% 4%;
+
+    --secondary: 0 0% 10%;
+    --secondary-foreground: 0 0% 80%;
+    --secondary-hover: 0 0% 14%;
+
+    --muted: 0 0% 10%;
+    --muted-foreground: 0 0% 45%;
+
+    --destructive: 0 70% 50%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 0 0% 12%;
-    --input: 0 0% 12%;
-    --ring: 262 83% 58%;
+    --border: 0 0% 14%;
+    --input: 0 0% 14%;
+    --ring: 210 30% 45%;
 
-    --radius: 0.75rem;
+    --radius: 0.5rem;
+
+    /* Status — flat, no glow */
+    --success: 152 60% 42%;
+    --warning: 38 92% 50%;
+    --error: 0 72% 51%;
   }
 }
 
@@ -52,19 +63,23 @@
     -moz-osx-font-smoothing: grayscale;
     margin: 0;
   }
+
+  code {
+    font-family: 'JetBrains Mono', monospace;
+  }
 }
 
-/* ── Scrollbar Styling ──────────────────────────────────────────────────── */
+/* ── Scrollbar ──────────────────────────────────────────────────────────── */
 
 @layer utilities {
   .scrollbar-thin {
     scrollbar-width: thin;
-    scrollbar-color: hsl(0 0% 15%) transparent;
+    scrollbar-color: hsl(0 0% 18%) transparent;
   }
 
   .scrollbar-thin::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+    width: 5px;
+    height: 5px;
   }
 
   .scrollbar-thin::-webkit-scrollbar-track {
@@ -72,145 +87,71 @@
   }
 
   .scrollbar-thin::-webkit-scrollbar-thumb {
-    background-color: hsl(0 0% 15%);
+    background-color: hsl(0 0% 18%);
     border-radius: 3px;
   }
-
-  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-    background-color: hsl(0 0% 25%);
-  }
 }
 
-/* ── Glow Effects ───────────────────────────────────────────────────────── */
-
-@layer utilities {
-  .glow-success {
-    box-shadow: 0 0 12px rgba(16, 185, 129, 0.15),
-                0 0 4px rgba(16, 185, 129, 0.1);
-  }
-
-  .glow-warning {
-    box-shadow: 0 0 12px rgba(245, 158, 11, 0.15),
-                0 0 4px rgba(245, 158, 11, 0.1);
-  }
-
-  .glow-error {
-    box-shadow: 0 0 12px rgba(244, 63, 94, 0.15),
-                0 0 4px rgba(244, 63, 94, 0.1);
-  }
-
-  .glow-primary {
-    box-shadow: 0 0 16px rgba(124, 58, 237, 0.2),
-                0 0 4px rgba(124, 58, 237, 0.1);
-  }
-}
-
-/* ── Gradient Text Utility ──────────────────────────────────────────────── */
-
-@layer utilities {
-  .text-gradient {
-    @apply bg-clip-text text-transparent;
-    background-image: linear-gradient(135deg, hsl(262 83% 68%), hsl(220 70% 60%));
-  }
-
-  .text-gradient-warm {
-    @apply bg-clip-text text-transparent;
-    background-image: linear-gradient(135deg, hsl(262 83% 68%), hsl(340 80% 60%));
-  }
-}
-
-/* ── Drop Zone Styles ───────────────────────────────────────────────────── */
+/* ── Components ─────────────────────────────────────────────────────────── */
 
 @layer components {
   .dropzone {
-    @apply border-2 border-dashed border-border rounded-xl p-8
-           transition-all duration-200 cursor-pointer
-           hover:border-primary/50 hover:bg-primary/5;
+    @apply border border-dashed border-border rounded-lg p-6
+           transition-colors duration-150 cursor-pointer;
+  }
+
+  .dropzone:hover {
+    border-color: hsl(var(--muted-foreground) / 0.3);
   }
 
   .dropzone-active {
-    @apply border-primary bg-primary/10 glow-primary;
+    border-color: hsl(var(--accent));
+    background-color: hsl(var(--accent) / 0.05);
   }
-}
 
-/* ── Card Variants ──────────────────────────────────────────────────────── */
-
-@layer components {
   .card {
-    @apply bg-card border border-border rounded-xl p-6
-           transition-colors duration-200
-           hover:border-neutral-800;
+    @apply bg-card border border-border rounded-lg p-5
+           transition-colors duration-150;
   }
 
-  .card-interactive {
-    @apply card cursor-pointer
-           hover:bg-card/80;
+  .card:hover {
+    border-color: hsl(0 0% 18%);
   }
 }
 
-/* ── Badge Variants ─────────────────────────────────────────────────────── */
+/* ── Badges — flat, no glow ─────────────────────────────────────────────── */
 
 @layer components {
-  .badge {
-    @apply inline-flex items-center gap-1 px-2.5 py-0.5
-           text-xs font-medium rounded-full;
+  .badge-neutral {
+    @apply inline-flex items-center gap-1 px-2 py-0.5
+           text-[10px] font-medium rounded
+           bg-secondary text-muted-foreground;
   }
 
   .badge-success {
-    @apply badge bg-emerald-500/10 text-emerald-400 border border-emerald-500/20;
-  }
-
-  .badge-warning {
-    @apply badge bg-amber-500/10 text-amber-400 border border-amber-500/20;
+    @apply inline-flex items-center gap-1 px-2 py-0.5
+           text-[10px] font-medium rounded;
+    background-color: hsl(var(--success) / 0.1);
+    color: hsl(var(--success));
   }
 
   .badge-error {
-    @apply badge bg-rose-500/10 text-rose-400 border border-rose-500/20;
-  }
-
-  .badge-neutral {
-    @apply badge bg-zinc-500/10 text-zinc-400 border border-zinc-500/20;
-  }
-
-  .badge-primary {
-    @apply badge bg-violet-500/10 text-violet-400 border border-violet-500/20;
+    @apply inline-flex items-center gap-1 px-2 py-0.5
+           text-[10px] font-medium rounded;
+    background-color: hsl(var(--error) / 0.1);
+    color: hsl(var(--error));
   }
 }
 
-/* ── Status Dot ─────────────────────────────────────────────────────────── */
-
-@layer components {
-  .status-dot {
-    @apply w-2 h-2 rounded-full;
-  }
-
-  .status-dot-success {
-    @apply status-dot bg-emerald-400;
-    box-shadow: 0 0 6px rgba(16, 185, 129, 0.4);
-  }
-
-  .status-dot-warning {
-    @apply status-dot bg-amber-400;
-    box-shadow: 0 0 6px rgba(245, 158, 11, 0.4);
-  }
-
-  .status-dot-error {
-    @apply status-dot bg-rose-400;
-    box-shadow: 0 0 6px rgba(244, 63, 94, 0.4);
-  }
-}
-
-/* ── Shimmer Loading ────────────────────────────────────────────────────── */
+/* ── Simple fade-in ─────────────────────────────────────────────────────── */
 
 @layer utilities {
-  .shimmer {
-    background: linear-gradient(
-      90deg,
-      hsl(0 0% 6%) 25%,
-      hsl(0 0% 10%) 50%,
-      hsl(0 0% 6%) 75%
-    );
-    background-size: 200% 100%;
-    animation: shimmer 2s linear infinite;
+  .animate-fade-in {
+    animation: fadeIn 0.3s ease-out;
   }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
 }

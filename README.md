@@ -22,7 +22,7 @@ Upload a photo of a whiteboard sketch → get `terraform validate`-passing `.tf`
 | Preprocessing | OpenCV |
 | Code Generation | Jinja2 templates |
 | Backend | FastAPI (Python 3.11) |
-| Frontend | React + TypeScript + Vite + Tailwind |
+| Frontend | React + TypeScript + Vite + Tailwind (UI shell pending Phase 6 backend wiring) |
 | Validation | Terraform CLI in Docker sandbox |
 | Training | Google Colab (GPU) |
 
@@ -83,7 +83,7 @@ npm run dev
 | Phase | Deliverable | Status | Needs GPU? |
 |---|---|---|---|
 | 0 | Repo scaffold, Docker, CI skeleton | ✅ | No |
-| 1 | Synthetic dataset generator | ✅ | No |
+| 1 | Synthetic dataset generator & annotation verifier (`data/verify_annotations.py`) | ✅ | No |
 | 2 | YOLOv8n training on synthetic set | ⬜ | Yes — Colab |
 | 3 | Real eval set integration | ⬜ | Yes — Colab |
 | 4 | OCR + rule-based relationship extraction | ⬜ | No |

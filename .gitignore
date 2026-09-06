@@ -42,6 +42,7 @@ runs/
 
 # Dataset (generated, not committed)
 data/synthetic_dataset/
+data/bbox_verification/
 data/real_eval/images/
 data/real_eval/labels/
 
