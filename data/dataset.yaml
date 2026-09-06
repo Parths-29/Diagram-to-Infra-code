@@ -1,0 +1,25 @@
+# YOLOv8 Dataset Configuration
+# Used by ultralytics for training the object detection model.
+#
+# Classes (7 total):
+#   0: compute        - EC2, EKS instances (rectangular boxes)
+#   1: database       - RDS databases (cylinder shapes)
+#   2: storage        - S3 buckets (rectangular boxes)
+#   3: load_balancer  - ALB/ELB (rectangular boxes)
+#   4: network        - VPC/subnet (large enclosing rectangles)
+#   5: arrow          - Connecting arrows between components
+#   6: text_label     - Text annotations/labels on the diagram
+
+path: ./data/synthetic_dataset
+train: train/images
+val: val/images
+
+nc: 7
+names:
+  - compute
+  - database
+  - storage
+  - load_balancer
+  - network
+  - arrow
+  - text_label

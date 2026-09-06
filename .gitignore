@@ -1,0 +1,67 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+.eggs/
+*.egg
+.venv/
+venv/
+env/
+.env
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnp
+.pnp.js
+
+# Vite
+frontend/dist/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# ML / Model weights
+*.pt
+*.pth
+*.onnx
+*.engine
+weights/
+runs/
+
+# Dataset (generated, not committed)
+data/synthetic_dataset/
+data/real_eval/images/
+data/real_eval/labels/
+
+# Terraform
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+crash.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Generated output
+output/
+*.zip
+
+# Docker
+.docker/
+
+# Jupyter
+.ipynb_checkpoints/

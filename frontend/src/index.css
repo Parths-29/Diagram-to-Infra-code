@@ -1,0 +1,216 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Dark-First Design Tokens ─────────────────────────────────────────────── */
+
+@layer base {
+  :root {
+    --background: 0 0% 0%;
+    --foreground: 0 0% 98%;
+
+    --card: 0 0% 3%;
+    --card-foreground: 0 0% 98%;
+
+    --popover: 0 0% 3%;
+    --popover-foreground: 0 0% 98%;
+
+    --primary: 262 83% 58%;
+    --primary-foreground: 0 0% 98%;
+
+    --secondary: 0 0% 8%;
+    --secondary-foreground: 0 0% 98%;
+
+    --muted: 0 0% 8%;
+    --muted-foreground: 0 0% 60%;
+
+    --accent: 0 0% 8%;
+    --accent-foreground: 0 0% 98%;
+
+    --destructive: 350 89% 60%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 0 0% 12%;
+    --input: 0 0% 12%;
+    --ring: 262 83% 58%;
+
+    --radius: 0.75rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    margin: 0;
+  }
+}
+
+/* ── Scrollbar Styling ──────────────────────────────────────────────────── */
+
+@layer utilities {
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(0 0% 15%) transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background-color: hsl(0 0% 15%);
+    border-radius: 3px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background-color: hsl(0 0% 25%);
+  }
+}
+
+/* ── Glow Effects ───────────────────────────────────────────────────────── */
+
+@layer utilities {
+  .glow-success {
+    box-shadow: 0 0 12px rgba(16, 185, 129, 0.15),
+                0 0 4px rgba(16, 185, 129, 0.1);
+  }
+
+  .glow-warning {
+    box-shadow: 0 0 12px rgba(245, 158, 11, 0.15),
+                0 0 4px rgba(245, 158, 11, 0.1);
+  }
+
+  .glow-error {
+    box-shadow: 0 0 12px rgba(244, 63, 94, 0.15),
+                0 0 4px rgba(244, 63, 94, 0.1);
+  }
+
+  .glow-primary {
+    box-shadow: 0 0 16px rgba(124, 58, 237, 0.2),
+                0 0 4px rgba(124, 58, 237, 0.1);
+  }
+}
+
+/* ── Gradient Text Utility ──────────────────────────────────────────────── */
+
+@layer utilities {
+  .text-gradient {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(135deg, hsl(262 83% 68%), hsl(220 70% 60%));
+  }
+
+  .text-gradient-warm {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(135deg, hsl(262 83% 68%), hsl(340 80% 60%));
+  }
+}
+
+/* ── Drop Zone Styles ───────────────────────────────────────────────────── */
+
+@layer components {
+  .dropzone {
+    @apply border-2 border-dashed border-border rounded-xl p-8
+           transition-all duration-200 cursor-pointer
+           hover:border-primary/50 hover:bg-primary/5;
+  }
+
+  .dropzone-active {
+    @apply border-primary bg-primary/10 glow-primary;
+  }
+}
+
+/* ── Card Variants ──────────────────────────────────────────────────────── */
+
+@layer components {
+  .card {
+    @apply bg-card border border-border rounded-xl p-6
+           transition-colors duration-200
+           hover:border-neutral-800;
+  }
+
+  .card-interactive {
+    @apply card cursor-pointer
+           hover:bg-card/80;
+  }
+}
+
+/* ── Badge Variants ─────────────────────────────────────────────────────── */
+
+@layer components {
+  .badge {
+    @apply inline-flex items-center gap-1 px-2.5 py-0.5
+           text-xs font-medium rounded-full;
+  }
+
+  .badge-success {
+    @apply badge bg-emerald-500/10 text-emerald-400 border border-emerald-500/20;
+  }
+
+  .badge-warning {
+    @apply badge bg-amber-500/10 text-amber-400 border border-amber-500/20;
+  }
+
+  .badge-error {
+    @apply badge bg-rose-500/10 text-rose-400 border border-rose-500/20;
+  }
+
+  .badge-neutral {
+    @apply badge bg-zinc-500/10 text-zinc-400 border border-zinc-500/20;
+  }
+
+  .badge-primary {
+    @apply badge bg-violet-500/10 text-violet-400 border border-violet-500/20;
+  }
+}
+
+/* ── Status Dot ─────────────────────────────────────────────────────────── */
+
+@layer components {
+  .status-dot {
+    @apply w-2 h-2 rounded-full;
+  }
+
+  .status-dot-success {
+    @apply status-dot bg-emerald-400;
+    box-shadow: 0 0 6px rgba(16, 185, 129, 0.4);
+  }
+
+  .status-dot-warning {
+    @apply status-dot bg-amber-400;
+    box-shadow: 0 0 6px rgba(245, 158, 11, 0.4);
+  }
+
+  .status-dot-error {
+    @apply status-dot bg-rose-400;
+    box-shadow: 0 0 6px rgba(244, 63, 94, 0.4);
+  }
+}
+
+/* ── Shimmer Loading ────────────────────────────────────────────────────── */
+
+@layer utilities {
+  .shimmer {
+    background: linear-gradient(
+      90deg,
+      hsl(0 0% 6%) 25%,
+      hsl(0 0% 10%) 50%,
+      hsl(0 0% 6%) 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 2s linear infinite;
+  }
+}

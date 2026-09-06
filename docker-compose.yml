@@ -1,0 +1,36 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: infra/Dockerfile.backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app/backend
+      - ./weights:/app/weights
+    environment:
+      - WEIGHTS_DIR=/app/weights
+      - HF_REPO_ID=parths-29/diagram-to-infra-yolov8n
+      - CONFIDENCE_THRESHOLD=0.6
+    depends_on:
+      - terraform-validator
+
+  frontend:
+    build:
+      context: .
+      dockerfile: infra/Dockerfile.frontend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+
+  terraform-validator:
+    build:
+      context: .
+      dockerfile: infra/Dockerfile.validator
+    # This service is invoked on-demand by the backend via Docker SDK,
+    # not as a long-running service. It stays idle here for build verification.
+    entrypoint: ["echo", "Terraform validator container ready"]

@@ -1,0 +1,11 @@
+# Minimal Terraform container for validation only.
+# No AWS credentials. Never runs `terraform apply`.
+FROM hashicorp/terraform:1.9
+
+WORKDIR /workspace
+
+# The container is invoked with:
+#   docker run --rm -v /path/to/tf:/workspace terraform-validator \
+#     sh -c "terraform init -backend=false && terraform validate"
+ENTRYPOINT ["sh", "-c"]
+CMD ["terraform init -backend=false && terraform validate"]
