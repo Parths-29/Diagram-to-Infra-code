@@ -1,0 +1,77 @@
+import nbformat
+from nbformat.v4 import new_notebook, new_markdown_cell, new_code_cell
+
+nb = new_notebook()
+
+nb.cells = [
+    new_markdown_cell(
+        "# Phase 2: YOLOv8n Training Notebook — Diagram-to-Infra-Code\n\n"
+        "This notebook trains a custom **YOLOv8n** object detection model on synthetic architecture diagram data.\n\n"
+        "### Target Classes (7 total):\n"
+        "1. `compute` (EC2, EKS)\n"
+        "2. `database` (RDS)\n"
+        "3. `storage` (S3)\n"
+        "4. `load_balancer` (ALB)\n"
+        "5. `network` (VPC/Subnet boundary)\n"
+        "6. `arrow` (directional connection)\n"
+        "7. `text_label` (label box text)\n\n"
+        "Run this notebook on Google Colab with GPU acceleration enabled (**Runtime -> Change runtime type -> T4 GPU**)."
+    ),
+    new_markdown_cell("## Step 1: GPU Check & Environment Setup"),
+    new_code_cell(
+        "!nvidia-smi\n"
+        "!pip install -q ultralytics huggingface_hub opencv-python-headless albumentations pillow"
+    ),
+    new_markdown_cell("## Step 2: Clone Repository & Generate Dataset"),
+    new_code_cell(
+        "!git clone https://github.com/Parths-29/Diagram-to-Infra-code.git\n"
+        "%cd Diagram-to-Infra-code\n\n"
+        "# Generate 500 unique diagrams + 1 copy = 1,000 total images\n"
+        "!python3 data/generate_synthetic.py --output data/synthetic_dataset --count 500 --augmented-copies 1 --seed 42"
+    ),
+    new_markdown_cell(
+        "## Step 3: Run YOLOv8n Training\n\n"
+        "Explicit augmentation kwargs:\n"
+        "- `fliplr=0.0` and `flipud=0.0` (disabled horizontal/vertical flips to preserve text & arrow orientation)\n"
+        "- `degrees=10.0`, `translate=0.1`, `scale=0.2`, `mosaic=0.5`, `mixup=0.1`"
+    ),
+    new_code_cell(
+        "!python3 ml/train.py --data data/dataset.yaml --epochs 50 --batch 16 --imgsz 640 --weights-out ml/weights --eval-out ml/eval_samples"
+    ),
+    new_markdown_cell("## Step 4: Display Training Results & Visual Evaluation Samples"),
+    new_code_cell(
+        "from IPython.display import Image, display\n"
+        "import glob\n\n"
+        "print(\"=== Training Confusion Matrix ===\")\n"
+        "display(Image(filename=\"runs/detect/diagram_yolov8n/confusion_matrix.png\"))\n\n"
+        "print(\"=== Results Curves ===\")\n"
+        "display(Image(filename=\"runs/detect/diagram_yolov8n/results.png\"))\n\n"
+        "print(\"=== Sample Visual Predictions (from ml/eval_samples/) ===\")\n"
+        "eval_images = glob.glob(\"ml/eval_samples/*.png\")[:5]\n"
+        "for img_path in eval_images:\n"
+        "    display(Image(filename=img_path))"
+    ),
+    new_markdown_cell("## Step 5: (Optional) Push Trained Weights to Hugging Face Hub"),
+    new_code_cell(
+        "import os\n"
+        "from huggingface_hub import HfApi\n\n"
+        "# Set your HF_TOKEN here if pushing to HF Hub:\n"
+        "HF_TOKEN = \"\"  # e.g., \"hf_...\"\n"
+        "REPO_ID = \"parths-29/diagram-to-infra-yolov8n\"\n\n"
+        "if HF_TOKEN:\n"
+        "    api = HfApi()\n"
+        "    api.create_repo(repo_id=REPO_ID, exist_ok=True, token=HF_TOKEN)\n"
+        "    api.upload_file(\n"
+        "        path_or_fileobj=\"ml/weights/best.pt\",\n"
+        "        path_in_repo=\"best.pt\",\n"
+        "        repo_id=REPO_ID,\n"
+        "        token=HF_TOKEN\n"
+        "    )\n"
+        "    print(f\"Uploaded best.pt to https://huggingface.co/{REPO_ID}\")\n"
+        "else:\n"
+        "    print(\"No HF_TOKEN provided. Weights are saved locally at ml/weights/best.pt\")"
+    )
+]
+
+with open('ml/notebooks/train_yolov8.ipynb', 'w') as f:
+    nbformat.write(nb, f)
