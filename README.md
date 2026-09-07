@@ -84,7 +84,7 @@ npm run dev
 |---|---|---|---|
 | 0 | Repo scaffold, Docker, CI skeleton | ✅ | No |
 | 1 | Synthetic dataset generator & annotation verifier (`data/verify_annotations.py`) | ✅ | No |
-| 2 | YOLOv8n training on synthetic set | ⬜ | Yes — Colab |
+| 2 | YOLOv8n training on synthetic set | ⏳ | Yes — Colab |
 | 3 | Real eval set integration | ⬜ | Yes — Colab |
 | 4 | OCR + rule-based relationship extraction | ⬜ | No |
 | 5 | Terraform template generation + validate | ⬜ | No |
