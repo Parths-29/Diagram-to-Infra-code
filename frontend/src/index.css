@@ -1,53 +1,51 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* ── Design Tokens ────────────────────────────────────────────────────────
-   Flat, restrained dark UI. Near-black background, muted neutral borders,
-   one understated accent (cool slate-blue). No glow, no shimmer.
-   ─────────────────────────────────────────────────────────────────────── */
-
 @layer base {
   :root {
-    --background: 0 0% 4%;
-    --foreground: 0 0% 93%;
+    /* Pure Pitch Black / Deep Obsidian */
+    --background: 0 0% 0%;
+    --foreground: 0 0% 98%;
 
-    --card: 0 0% 6%;
-    --card-foreground: 0 0% 93%;
+    /* Ultra-dark zinc with subtle 1px border */
+    --card: 0 0% 3%;
+    --card-foreground: 0 0% 98%;
 
-    --popover: 0 0% 6%;
-    --popover-foreground: 0 0% 93%;
+    --popover: 0 0% 3%;
+    --popover-foreground: 0 0% 98%;
 
-    /* Understated accent — cool slate-blue, not violet */
-    --accent: 210 30% 45%;
+    /* Subdued border color hsl(0 0% 12%) */
+    --border: 0 0% 12%;
+    --input: 0 0% 12%;
+    
+    --primary: 0 0% 98%;
+    --primary-foreground: 0 0% 0%;
+
+    --secondary: 0 0% 9%;
+    --secondary-foreground: 0 0% 98%;
+    --secondary-hover: 0 0% 15%;
+
+    --muted: 0 0% 9%;
+    --muted-foreground: 0 0% 60%;
+
+    --accent: 0 0% 9%;
     --accent-foreground: 0 0% 98%;
-    --accent-hover: 210 30% 38%;
+    --accent-hover: 0 0% 12%;
 
-    --primary: 0 0% 93%;
-    --primary-foreground: 0 0% 4%;
-
-    --secondary: 0 0% 10%;
-    --secondary-foreground: 0 0% 80%;
-    --secondary-hover: 0 0% 14%;
-
-    --muted: 0 0% 10%;
-    --muted-foreground: 0 0% 45%;
-
-    --destructive: 0 70% 50%;
+    --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 0 0% 14%;
-    --input: 0 0% 14%;
-    --ring: 210 30% 45%;
+    --ring: 0 0% 80%;
 
-    --radius: 0.5rem;
+    --radius: 0.75rem; /* rounded-xl */
 
-    /* Status — flat, no glow */
-    --success: 152 60% 42%;
-    --warning: 38 92% 50%;
-    --error: 0 72% 51%;
+    /* Status Indicators */
+    --success: 152 82% 40%; /* Emerald #10b981 */
+    --warning: 38 92% 50%; /* Amber #f59e0b */
+    --error: 343 89% 60%; /* Rose #f43f5e */
   }
 }
 
@@ -69,17 +67,15 @@
   }
 }
 
-/* ── Scrollbar ──────────────────────────────────────────────────────────── */
-
 @layer utilities {
   .scrollbar-thin {
     scrollbar-width: thin;
-    scrollbar-color: hsl(0 0% 18%) transparent;
+    scrollbar-color: hsl(var(--border)) transparent;
   }
 
   .scrollbar-thin::-webkit-scrollbar {
-    width: 5px;
-    height: 5px;
+    width: 6px;
+    height: 6px;
   }
 
   .scrollbar-thin::-webkit-scrollbar-track {
@@ -87,63 +83,70 @@
   }
 
   .scrollbar-thin::-webkit-scrollbar-thumb {
-    background-color: hsl(0 0% 18%);
+    background-color: hsl(var(--border));
     border-radius: 3px;
   }
+  
+  .glow-success {
+    box-shadow: 0 0 12px 1px hsl(var(--success) / 0.3);
+  }
+  
+  .glow-warning {
+    box-shadow: 0 0 12px 1px hsl(var(--warning) / 0.3);
+  }
+  
+  .glow-error {
+    box-shadow: 0 0 12px 1px hsl(var(--error) / 0.3);
+  }
 }
-
-/* ── Components ─────────────────────────────────────────────────────────── */
 
 @layer components {
   .dropzone {
-    @apply border border-dashed border-border rounded-lg p-6
-           transition-colors duration-150 cursor-pointer;
+    @apply border border-dashed border-border rounded-xl p-6
+           transition-all duration-200 cursor-pointer;
   }
 
   .dropzone:hover {
-    border-color: hsl(var(--muted-foreground) / 0.3);
+    border-color: hsl(var(--muted-foreground) / 0.5);
   }
 
   .dropzone-active {
-    border-color: hsl(var(--accent));
-    background-color: hsl(var(--accent) / 0.05);
+    border-color: hsl(var(--foreground));
+    background-color: hsl(var(--foreground) / 0.02);
   }
 
   .card {
-    @apply bg-card border border-border rounded-lg p-5
-           transition-colors duration-150;
+    @apply bg-card border border-border rounded-xl p-6
+           transition-all duration-200;
   }
 
   .card:hover {
-    border-color: hsl(0 0% 18%);
+    @apply border-neutral-800;
   }
-}
-
-/* ── Badges — flat, no glow ─────────────────────────────────────────────── */
-
-@layer components {
+  
+  /* Badges with optional glows */
   .badge-neutral {
-    @apply inline-flex items-center gap-1 px-2 py-0.5
-           text-[10px] font-medium rounded
-           bg-secondary text-muted-foreground;
+    @apply inline-flex items-center gap-1.5 px-2.5 py-0.5
+           text-xs font-medium rounded-md
+           bg-secondary text-muted-foreground border border-border;
   }
 
   .badge-success {
-    @apply inline-flex items-center gap-1 px-2 py-0.5
-           text-[10px] font-medium rounded;
+    @apply inline-flex items-center gap-1.5 px-2.5 py-0.5
+           text-xs font-medium rounded-md border glow-success;
     background-color: hsl(var(--success) / 0.1);
     color: hsl(var(--success));
+    border-color: hsl(var(--success) / 0.2);
   }
 
   .badge-error {
-    @apply inline-flex items-center gap-1 px-2 py-0.5
-           text-[10px] font-medium rounded;
+    @apply inline-flex items-center gap-1.5 px-2.5 py-0.5
+           text-xs font-medium rounded-md border glow-error;
     background-color: hsl(var(--error) / 0.1);
     color: hsl(var(--error));
+    border-color: hsl(var(--error) / 0.2);
   }
 }
-
-/* ── Simple fade-in ─────────────────────────────────────────────────────── */
 
 @layer utilities {
   .animate-fade-in {
