@@ -6,18 +6,15 @@
 
 @layer base {
   :root {
-    /* Pure Pitch Black / Deep Obsidian */
     --background: 0 0% 0%;
     --foreground: 0 0% 98%;
 
-    /* Ultra-dark zinc with subtle 1px border */
     --card: 0 0% 3%;
     --card-foreground: 0 0% 98%;
 
     --popover: 0 0% 3%;
     --popover-foreground: 0 0% 98%;
 
-    /* Subdued border color hsl(0 0% 12%) */
     --border: 0 0% 12%;
     --input: 0 0% 12%;
     
@@ -40,12 +37,11 @@
 
     --ring: 0 0% 80%;
 
-    --radius: 0.75rem; /* rounded-xl */
+    --radius: 0.75rem;
 
-    /* Status Indicators */
-    --success: 152 82% 40%; /* Emerald #10b981 */
-    --warning: 38 92% 50%; /* Amber #f59e0b */
-    --error: 343 89% 60%; /* Rose #f43f5e */
+    --success: 152 82% 40%;
+    --warning: 38 92% 50%;
+    --error: 343 89% 60%;
   }
 }
 
@@ -53,7 +49,6 @@
   * {
     @apply border-border;
   }
-
   body {
     @apply bg-background text-foreground;
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
@@ -61,7 +56,6 @@
     -moz-osx-font-smoothing: grayscale;
     margin: 0;
   }
-
   code {
     font-family: 'JetBrains Mono', monospace;
   }
@@ -72,89 +66,79 @@
     scrollbar-width: thin;
     scrollbar-color: hsl(var(--border)) transparent;
   }
-
   .scrollbar-thin::-webkit-scrollbar {
     width: 6px;
     height: 6px;
   }
-
   .scrollbar-thin::-webkit-scrollbar-track {
     background: transparent;
   }
-
   .scrollbar-thin::-webkit-scrollbar-thumb {
     background-color: hsl(var(--border));
     border-radius: 3px;
-  }
-  
-  .glow-success {
-    box-shadow: 0 0 12px 1px hsl(var(--success) / 0.3);
-  }
-  
-  .glow-warning {
-    box-shadow: 0 0 12px 1px hsl(var(--warning) / 0.3);
-  }
-  
-  .glow-error {
-    box-shadow: 0 0 12px 1px hsl(var(--error) / 0.3);
   }
 }
 
 @layer components {
   .dropzone {
-    @apply border border-dashed border-border rounded-xl p-6
-           transition-all duration-200 cursor-pointer;
+    @apply flex flex-col items-center justify-center border-2 border-dashed border-border rounded-xl p-12
+           transition-all duration-200 cursor-pointer bg-card/50 hover:bg-card hover:border-muted-foreground/50;
   }
-
-  .dropzone:hover {
-    border-color: hsl(var(--muted-foreground) / 0.5);
-  }
-
+  
   .dropzone-active {
-    border-color: hsl(var(--foreground));
-    background-color: hsl(var(--foreground) / 0.02);
+    @apply border-foreground bg-foreground/5;
   }
 
   .card {
     @apply bg-card border border-border rounded-xl p-6
-           transition-all duration-200;
-  }
-
-  .card:hover {
-    @apply border-neutral-800;
+           transition-all duration-300 hover:border-neutral-700 hover:shadow-lg hover:shadow-black/50;
   }
   
-  /* Badges with optional glows */
   .badge-neutral {
-    @apply inline-flex items-center gap-1.5 px-2.5 py-0.5
-           text-xs font-medium rounded-md
+    @apply inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-md
            bg-secondary text-muted-foreground border border-border;
   }
 
   .badge-success {
-    @apply inline-flex items-center gap-1.5 px-2.5 py-0.5
-           text-xs font-medium rounded-md border glow-success;
+    @apply inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-md border;
     background-color: hsl(var(--success) / 0.1);
     color: hsl(var(--success));
-    border-color: hsl(var(--success) / 0.2);
+    border-color: hsl(var(--success) / 0.3);
+    box-shadow: 0 0 12px 1px hsl(var(--success) / 0.2);
   }
 
   .badge-error {
-    @apply inline-flex items-center gap-1.5 px-2.5 py-0.5
-           text-xs font-medium rounded-md border glow-error;
+    @apply inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-md border;
     background-color: hsl(var(--error) / 0.1);
     color: hsl(var(--error));
-    border-color: hsl(var(--error) / 0.2);
+    border-color: hsl(var(--error) / 0.3);
+    box-shadow: 0 0 12px 1px hsl(var(--error) / 0.2);
+  }
+  
+  .badge-warning {
+    @apply inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-md border;
+    background-color: hsl(var(--warning) / 0.1);
+    color: hsl(var(--warning));
+    border-color: hsl(var(--warning) / 0.3);
+    box-shadow: 0 0 12px 1px hsl(var(--warning) / 0.2);
   }
 }
 
 @layer utilities {
   .animate-fade-in {
-    animation: fadeIn 0.3s ease-out;
+    animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+  .animate-slide-up {
+    animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   }
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(4px); }
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
 }
