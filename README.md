@@ -84,7 +84,7 @@ npm run dev
 |---|---|---|---|
 | 0 | Repo scaffold, Docker, CI skeleton | ✅ | No |
 | 1 | Synthetic dataset generator & annotation verifier (`data/verify_annotations.py`) | ✅ | No |
-| 2 | YOLOv8n training on synthetic set | ⏳ | Yes — Colab |
+| 2 | YOLOv8n training on synthetic set | ✅ | Yes — Colab |
 | 3 | Real eval set integration | ⬜ | Yes — Colab |
 | 4 | OCR + rule-based relationship extraction | ⬜ | No |
 | 5 | Terraform template generation + validate | ⬜ | No |
@@ -102,7 +102,7 @@ npm run dev
 
 ## Training
 
-Training runs on Google Colab. See `ml/notebooks/train_yolov8.ipynb` for the training notebook. Trained weights are hosted on Hugging Face Hub at `parths-29/diagram-to-infra-yolov8n`.
+Training runs on Google Colab. See `ml/notebooks/train_yolov8.ipynb` for the training notebook. Trained weights are hosted on Hugging Face Hub at `Parth2999/diagram-to-infra-yolov8n`.
 
 ## License
 
