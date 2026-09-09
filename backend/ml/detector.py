@@ -64,7 +64,7 @@ class DiagramObjectDetector:
     def __init__(
         self,
         weights_path: Optional[str] = None,
-        hf_repo_id: str = "parths-29/diagram-to-infra-yolov8n",
+        hf_repo_id: str = "Parth2999/diagram-to-infra-yolov8n",
         conf_threshold: float = 0.25,
         iou_threshold: float = 0.45
     ):
