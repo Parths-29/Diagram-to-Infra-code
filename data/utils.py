@@ -104,6 +104,9 @@ BG_COLORS = [
     (248, 248, 248),  # very light gray
 ]
 
+# Augmented paper style tags — used by draw_paper_background()
+PAPER_STYLES = ["plain", "lined", "grid", "plain"]  # plain weighted 2x intentionally
+
 # Pen colors for drawing shapes
 PEN_COLORS = [
     (0, 0, 0),        # black
@@ -320,6 +323,122 @@ def draw_text_label(
 
 # ── Augmentation ─────────────────────────────────────────────────────────────
 
+# ── New Background & Ink Helpers ────────────────────────────────────────────
+
+def draw_paper_background(
+    img: np.ndarray,
+    style: str = "plain",
+    bg_color: Optional[tuple] = None,
+) -> np.ndarray:
+    """
+    Draw a paper background onto `img` in-place.
+
+    Styles:
+        'plain'  - solid fill (original behaviour)
+        'lined'  - ruled horizontal lines (thin, light gray)
+        'grid'   - grid lines (thin, light gray)
+
+    Ruled-line design constraints:
+        - 1px stroke, color is bg_color darkened by 10-15 DN — NOT drawn at
+          handwriting contrast so the model doesn't fire text_label on them.
+        - Spacing is 18-22px, consistent per image.
+        - Lines start and end slightly inside the canvas edge so they don't
+          form a bounding box that confuses the arrow detector.
+    """
+    h, w = img.shape[:2]
+    if bg_color is None:
+        bg_color = random.choice(BG_COLORS)
+    img[:] = bg_color
+
+    if style in ("lined", "grid"):
+        # Line color: darken the bg by ~12-18 DN in each channel, clamp to 0
+        darken = random.randint(12, 18)
+        line_color = tuple(max(0, c - darken) for c in bg_color)
+        spacing = random.randint(18, 22)
+        margin_x = 8
+
+        if style in ("lined", "grid"):
+            # Horizontal lines
+            y = spacing
+            while y < h - spacing:
+                cv2.line(img, (margin_x, y), (w - margin_x, y),
+                         line_color, 1, cv2.LINE_AA)
+                y += spacing
+
+        if style == "grid":
+            # Vertical lines
+            x = spacing
+            while x < w - spacing:
+                cv2.line(img, (x, margin_x), (x, h - margin_x),
+                         line_color, 1, cv2.LINE_AA)
+                x += spacing
+
+    return img
+
+
+def draw_strokes_with_variable_thickness(
+    img: np.ndarray,
+    pen_color: tuple,
+    thickness: int,
+) -> tuple:
+    """
+    Return a (possibly-modified) pen_color and thickness pair that simulates
+    ink variation within realistic bounds.
+
+    - Thickness: 1-4px uniform random per image
+    - Color: darken or lighten by up to 30 DN per channel so the pen looks
+      like it's running dry (lighter) or freshly inked (darker).
+    """
+    t = random.randint(1, 4)
+    shift = random.randint(-30, 30)
+    varied = tuple(int(max(0, min(255, c + shift))) for c in pen_color)
+    return varied, t
+
+
+def augment_perspective_warp(
+    img: np.ndarray,
+    max_offset_frac: float = 0.12,
+) -> np.ndarray:
+    """
+    Apply a bounded perspective warp to simulate an angled phone photo.
+
+    Each corner is displaced by up to `max_offset_frac` * dimension in X and Y.
+    Capped at 12% by default so component aspect ratios stay recognisable
+    (a square EC2 box warped >30% starts looking like a parallelogram the
+    model has never seen).
+
+    The warped output is the same size as the input (canvas-fit).
+    """
+    h, w = img.shape[:2]
+    max_dx = int(w * max_offset_frac)
+    max_dy = int(h * max_offset_frac)
+
+    def rnd(maxv):
+        return random.randint(-maxv, maxv)
+
+    src = np.float32([
+        [0,     0    ],
+        [w - 1, 0    ],
+        [w - 1, h - 1],
+        [0,     h - 1],
+    ])
+    dst = np.float32([
+        [0     + rnd(max_dx), 0     + rnd(max_dy)],
+        [w - 1 + rnd(max_dx), 0     + rnd(max_dy)],
+        [w - 1 + rnd(max_dx), h - 1 + rnd(max_dy)],
+        [0     + rnd(max_dx), h - 1 + rnd(max_dy)],
+    ])
+
+    M = cv2.getPerspectiveTransform(src, dst)
+    bg = random.choice(BG_COLORS)
+    warped = cv2.warpPerspective(
+        img, M, (w, h),
+        borderMode=cv2.BORDER_CONSTANT,
+        borderValue=bg,
+    )
+    return warped
+
+
 def augment_rotation(img: np.ndarray, max_angle: float = 5.0) -> np.ndarray:
     """Rotate image by a small random angle to simulate imperfect photos."""
     angle = random.uniform(-max_angle, max_angle)
@@ -350,8 +469,19 @@ def augment_brightness(img: np.ndarray, range_pct: float = 0.15) -> np.ndarray:
     return np.clip(img.astype(np.float32) * factor, 0, 255).astype(np.uint8)
 
 
-def apply_augmentations(img: np.ndarray) -> np.ndarray:
-    """Apply a random subset of augmentations to simulate hand-drawn noise."""
+def apply_augmentations(
+    img: np.ndarray,
+    force_perspective: bool = False,
+) -> np.ndarray:
+    """
+    Apply a random subset of augmentations to simulate hand-drawn / phone-photo noise.
+
+    Original pipeline (always available):
+        rotation, blur, noise, brightness
+
+    New axes (enabled probabilistically or forced):
+        perspective warp
+    """
     if random.random() < 0.7:
         img = augment_rotation(img)
     if random.random() < 0.5:
@@ -360,6 +490,9 @@ def apply_augmentations(img: np.ndarray) -> np.ndarray:
         img = augment_noise(img)
     if random.random() < 0.5:
         img = augment_brightness(img)
+    # Perspective warp: 40% chance normally, 100% if forced
+    if force_perspective or random.random() < 0.4:
+        img = augment_perspective_warp(img)
     return img
 
 

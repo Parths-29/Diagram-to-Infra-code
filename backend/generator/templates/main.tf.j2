@@ -86,6 +86,22 @@ resource "aws_instance" "{{ ec2.id }}" {
   {% endif %}
   vpc_security_group_ids = [aws_security_group.default_compute_sg.id]
   tags = { Name = "{{ ec2.label }}" }
+
+  {% if ec2.sqs_targets or ec2.rds_targets or ec2.s3_targets %}
+  # Auto-injected connections based on diagram arrows (Fan-out mapping)
+  user_data = <<-EOF
+              #!/bin/bash
+              {% for sqs in ec2.sqs_targets %}
+              echo "export SQS_QUEUE_URL=${aws_sqs_queue.{{ sqs.id }}.url}" >> /etc/environment
+              {% endfor %}
+              {% for rds in ec2.rds_targets %}
+              echo "export DB_ENDPOINT=${aws_db_instance.{{ rds.id }}.endpoint}" >> /etc/environment
+              {% endfor %}
+              {% for s3 in ec2.s3_targets %}
+              echo "export S3_BUCKET=${aws_s3_bucket.{{ s3.id }}.bucket}" >> /etc/environment
+              {% endfor %}
+              EOF
+  {% endif %}
 }
 {% endfor %}
 
@@ -166,5 +182,12 @@ resource "aws_s3_bucket_public_access_block" "{{ s3.id }}_block" {
   block_public_policy     = true
   ignore_public_acls      = true
   restrict_public_buckets = true
+}
+{% endfor %}
+
+# ---------- SQS Queues ----------
+{% for sqs in sqs_queues %}
+resource "aws_sqs_queue" "{{ sqs.id }}" {
+  name = "{{ sqs.label | lower | replace(' ', '-') | truncate(80, True, '') }}"
 }
 {% endfor %}

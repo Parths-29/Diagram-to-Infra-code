@@ -56,6 +56,8 @@ TYPE_PATTERNS: List[Tuple[re.Pattern, str, str]] = [
     (re.compile(r"\baurora\b", re.I), "database", "rds"),
     (re.compile(r"\bdynamo", re.I), "database", "dynamodb"),
     (re.compile(r"\bmongo\b", re.I), "database", "rds"),
+    (re.compile(r"\bqueue\b", re.I), "compute", "sqs"),
+    (re.compile(r"\bsqs\b", re.I), "compute", "sqs"),
     (re.compile(r"\bredis\b", re.I), "database", "elasticache"),
     (re.compile(r"\bcache\b", re.I), "database", "elasticache"),
     (re.compile(r"\bdb\b", re.I), "database", "rds"),

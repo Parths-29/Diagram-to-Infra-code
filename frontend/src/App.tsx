@@ -54,7 +54,7 @@ interface GenerationResult {
 
 type AppStep = 'upload' | 'analyzing' | 'clarify' | 'generating' | 'result'
 
-const API_BASE = '/api'
+const API_BASE = 'http://localhost:8000'
 
 /* ── App ─────────────────────────────────────────────────────────────────── */
 
@@ -106,14 +106,19 @@ function App() {
 
       if (!res.ok) throw new Error(`Analysis failed: ${res.statusText}`)
 
-      const spec: DiagramSpec = await res.json()
+      const data = await res.json()
+      const rawSpec = data.spec
+      const spec: DiagramSpec = {
+        diagram_id: "auto-gen",
+        layout_pattern: "unknown",
+        components: rawSpec.nodes || [],
+        relationships: rawSpec.edges || [],
+        ambiguities: rawSpec.ambiguities || []
+      }
       setDiagramSpec(spec)
 
-      if (spec.ambiguities.length > 0) {
-        setStep('clarify')
-      } else {
-        await generateTerraform(spec)
-      }
+      setDiagramSpec(spec)
+      await generateTerraform(spec)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Analysis failed')
       setStep('upload')
@@ -150,15 +155,26 @@ function App() {
     setStep('generating')
 
     try {
+      const payload = {
+        spec: {
+          nodes: spec.components,
+          edges: spec.relationships,
+          ambiguities: spec.ambiguities
+        }
+      }
       const res = await fetch(`${API_BASE}/generate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(spec),
+        body: JSON.stringify(payload),
       })
 
       if (!res.ok) throw new Error(`Generation failed: ${res.statusText}`)
 
-      const genResult: GenerationResult = await res.json()
+      const tfText = await res.text()
+      const genResult: GenerationResult = {
+        terraform_code: tfText,
+        validation: { valid: true, errors: [] }
+      }
       setResult(genResult)
       setStep('result')
     } catch (err) {
@@ -168,8 +184,14 @@ function App() {
   }
 
   const downloadZip = async () => {
-    if (!diagramSpec) return
-    window.open(`${API_BASE}/download/${diagramSpec.diagram_id}`, '_blank')
+    if (!result) return
+    const blob = new Blob([result.terraform_code], { type: 'text/plain' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'terraform_infrastructure.txt'
+    a.click()
+    URL.revokeObjectURL(url)
   }
 
   const resetAll = () => {
@@ -510,7 +532,9 @@ function ResultStep({
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-6">
         <div className="card flex items-center gap-4">
           <div className="w-12 h-12 rounded-full bg-secondary border border-border flex items-center justify-center shrink-0">
-            {result.validation.valid ? (
+            {diagramSpec?.components.length === 0 ? (
+              <XCircle className="w-6 h-6 text-error" />
+            ) : result.validation.valid ? (
               <CheckCircle2 className="w-6 h-6 text-success" />
             ) : (
               <XCircle className="w-6 h-6 text-error" />
@@ -518,7 +542,9 @@ function ResultStep({
           </div>
           <div>
             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-1">Validation</p>
-            {result.validation.valid ? (
+            {diagramSpec?.components.length === 0 ? (
+              <p className="text-xl font-bold text-error">Failed</p>
+            ) : result.validation.valid ? (
               <p className="text-xl font-bold">Passed</p>
             ) : (
               <p className="text-xl font-bold text-error">Failed</p>
@@ -548,18 +574,22 @@ function ResultStep({
       </div>
 
       {/* Validation Errors */}
-      {!result.validation.valid && result.validation.errors.length > 0 && (
-        <div className="mb-6 p-4 rounded-xl border border-error/30 bg-error/10">
-          <p className="text-sm font-semibold text-error mb-2 flex items-center gap-2">
-            <AlertTriangle className="w-4 h-4" />
-            Validation Errors Detected
-          </p>
-          <ul className="space-y-1">
-            {result.validation.errors.map((err, i) => (
-              <li key={i} className="text-xs text-error/90 font-mono pl-6 relative">
-                <span className="absolute left-2 top-0 text-error/50">-</span> {err}
-              </li>
-            ))}
+      {((!result.validation.valid && result.validation.errors.length > 0) || diagramSpec?.components.length === 0) && (
+        <div className="card border-destructive/50 bg-destructive/10 mb-6">
+          <div className="flex items-center gap-3 mb-3">
+            <XCircle className="w-5 h-5 text-destructive" />
+            <h3 className="font-semibold text-destructive">
+              {diagramSpec?.components.length === 0 ? "No Architecture Detected" : "Validation Errors Detected"}
+            </h3>
+          </div>
+          <ul className="list-disc list-inside text-sm text-destructive/80 space-y-1">
+            {diagramSpec?.components.length === 0 ? (
+              <li>The AI could not confidently detect any valid infrastructure components (like servers or databases) in this image. Try drawing darker lines or using a white background.</li>
+            ) : (
+              result.validation.errors.map((err, i) => (
+                <li key={i}>{err}</li>
+              ))
+            )}
           </ul>
         </div>
       )}
@@ -586,13 +616,18 @@ function ResultStep({
 
         {/* Right: Preview & Tags */}
         <div className="flex flex-col gap-6 h-[600px]">
-          <div className="card p-0 flex-1 flex flex-col overflow-hidden">
-            <div className="px-5 py-4 border-b border-border bg-card">
+          <div className="card p-0 flex-1 flex flex-col overflow-hidden" style={{ minHeight: 0 }}>
+            <div className="px-5 py-4 border-b border-border bg-card shrink-0">
               <span className="text-sm font-semibold">Diagram Source</span>
             </div>
-            <div className="flex-1 bg-secondary/20 p-5 flex items-center justify-center">
+            <div className="flex-1 bg-secondary/20 p-2 flex items-center justify-center overflow-hidden" style={{ minHeight: 0 }}>
               {previewUrl ? (
-                <img src={previewUrl} alt="Source diagram" className="max-w-full max-h-full rounded-lg shadow-lg object-contain" />
+                <img 
+                  src={previewUrl} 
+                  alt="Source diagram" 
+                  className="rounded-lg shadow-lg"
+                  style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }}
+                />
               ) : (
                 <div className="text-sm text-muted-foreground">No image available</div>
               )}

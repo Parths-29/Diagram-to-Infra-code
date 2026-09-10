@@ -28,3 +28,18 @@ A full end-to-end generator test was written to verify the structural robustness
 - **Dangling Nodes:** An orphan EC2 and an orphan RDS instance floating with no VPC connections gracefully compiled into syntactically valid HCL (omitting subnet/vpc parameters instead of crashing).
 
 Both scenarios successfully passed `terraform validate`!
+
+## Phase 6 Completed (Full-Stack Web App)
+We successfully integrated the ML pipeline and Terraform generator into a polished web application!
+
+### Backend (FastAPI)
+- Started a Uvicorn server (`backend/main.py`) exposing two primary endpoints:
+  - `POST /analyze`: Accepts an image file upload, processes it through YOLOv8n + EasyOCR + Graph Solver, and returns the structured `DiagramSpec` JSON.
+  - `POST /generate`: Accepts the JSON spec, passes it through the Jinja templates, and returns raw Terraform HCL code.
+
+### Frontend (React + Vite)
+- Created a beautiful, modern UI using Vanilla CSS (`index.css`) featuring dark mode glassmorphism, glowing neons, smooth hover animations, and the Inter font family.
+- Built a drag-and-drop `ImageUploader` component with interactive states.
+- Built a `ResultsViewer` split pane utilizing `@monaco-editor/react` to display the extracted JSON structure and the final Terraform code side-by-side with syntax highlighting and copy-to-clipboard functionality.
+
+The application is now fully functional end-to-end!

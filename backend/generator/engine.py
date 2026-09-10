@@ -46,13 +46,13 @@ class TerraformGenerator:
         # 1. Resolve Nodes
         node_map = {n.id: n for n in spec.nodes}
         
-        # We need a context payload for Jinja
         context = {
             "vpcs": [],
             "ec2s": [],
             "albs": [],
             "rds_instances": [],
-            "s3_buckets": []
+            "s3_buckets": [],
+            "sqs_queues": []
         }
         
         # Group nodes by subtype
@@ -68,7 +68,10 @@ class TerraformGenerator:
                 "edges_in": [],
                 "vpc_id": None,
                 "subnet_id": None,
-                "targets": [] # For ALBs pointing to EC2s
+                "targets": [], # For ALBs pointing to EC2s
+                "sqs_targets": [], # For EC2 pointing to SQS
+                "rds_targets": [], # For EC2 pointing to RDS
+                "s3_targets": [] # For EC2 pointing to S3
             }
             
             if node.subtype == "vpc":
@@ -81,6 +84,8 @@ class TerraformGenerator:
                 context["rds_instances"].append(node_ctx)
             elif node.subtype == "s3":
                 context["s3_buckets"].append(node_ctx)
+            elif node.subtype == "sqs":
+                context["sqs_queues"].append(node_ctx)
                 
         # 2. Resolve Edges (Type-Pair mapping)
         # We'll attach edge context directly to the node dictionaries so the template
@@ -121,6 +126,15 @@ class TerraformGenerator:
             elif mapping == "subnet_id":
                 # EC2 -> Subnet
                 source_ctx["subnet_id"] = target_ctx["id"]
+                
+            # Ad-hoc mappings for worker fan-out
+            if s_type == "ec2" and t_type == "sqs":
+                source_ctx["sqs_targets"].append(target_ctx)
+                target_ctx["edges_in"].append(source_ctx)
+            if s_type == "ec2" and t_type == "rds":
+                source_ctx["rds_targets"].append(target_ctx)
+            if s_type == "ec2" and t_type == "s3":
+                source_ctx["s3_targets"].append(target_ctx)
             
         # 3. Render Template
         template = self.env.get_template("main.tf.j2")
