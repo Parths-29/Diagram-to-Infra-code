@@ -56,9 +56,16 @@ print(f"Dataset YAML written to {yaml_path}")
 # If it looks bad, drop Ultralytics' runtime perspective to 0 and keep degrees low, since
 # our own generator already covers that augmentation axis.
 
-V1_WEIGHTS = "/content/best_v1.pt"  # set to "yolov8n.pt" to train from scratch
+V1_WEIGHTS = "/content/best_v1.pt"  # If training from scratch, change to "yolov8n.pt" and bump lr0 to 0.005
 
-model = YOLO(V1_WEIGHTS if os.path.exists(V1_WEIGHTS) else "yolov8n.pt")
+if not os.path.exists(V1_WEIGHTS) and V1_WEIGHTS != "yolov8n.pt":
+    raise FileNotFoundError(
+        f"Base weights not found at {V1_WEIGHTS}! "
+        f"Please upload your existing best.pt to /content/best_v1.pt before running, "
+        f"or set V1_WEIGHTS = 'yolov8n.pt' to train from scratch."
+    )
+
+model = YOLO(V1_WEIGHTS)
 
 results = model.train(
     data=yaml_path,
@@ -66,7 +73,7 @@ results = model.train(
     imgsz=640,
     batch=16,
     patience=15,         # Early stop if no improvement for 15 epochs
-    lr0=0.001,           # Lower LR for fine-tuning (was 0.01 for scratch)
+    lr0=0.001,           # Lower LR for fine-tuning. Bump to 0.005 if training from scratch
     lrf=0.01,
     warmup_epochs=3,
     mosaic=1.0,
