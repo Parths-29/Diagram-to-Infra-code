@@ -589,6 +589,11 @@ def generate_dataset(
     # Split: 80% train, 20% val
     val_count = max(1, total_count // 5)
     train_count = total_count - val_count
+    
+    # Pre-shuffle the train/val assignments to ensure a uniform 
+    # distribution of archetypes across both splits.
+    splits = ["train"] * train_count + ["val"] * val_count
+    random.shuffle(splits)
 
     archetype_names = list(ARCHETYPE_GENERATORS.keys())
     # Distribute evenly across archetypes
@@ -603,8 +608,8 @@ def generate_dataset(
         count = per_archetype + (1 if arch_idx < remainder else 0)
 
         for i in range(count):
-            # Determine split
-            split = "val" if idx >= train_count else "train"
+            # Determine split from shuffled list
+            split = splits[idx]
 
             # Random image size
             img_w, img_h = random.choice(IMG_SIZES)

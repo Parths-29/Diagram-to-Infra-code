@@ -1,0 +1,170 @@
+# ---------- VPC & Subnets ----------
+{% for vpc in vpcs %}
+resource "aws_vpc" "{{ vpc.id }}" {
+  cidr_block           = "10.0.0.0/16"
+  enable_dns_support   = true
+  enable_dns_hostnames = true
+  tags = { Name = "{{ vpc.label }}" }
+}
+
+resource "aws_internet_gateway" "{{ vpc.id }}_igw" {
+  vpc_id = aws_vpc.{{ vpc.id }}.id
+}
+
+resource "aws_subnet" "{{ vpc.id }}_public" {
+  vpc_id                  = aws_vpc.{{ vpc.id }}.id
+  cidr_block              = "10.0.1.0/24"
+  map_public_ip_on_launch = true
+  availability_zone       = "us-east-1a"
+  tags = { Name = "{{ vpc.label }}-public-subnet" }
+}
+
+resource "aws_subnet" "{{ vpc.id }}_private" {
+  vpc_id            = aws_vpc.{{ vpc.id }}.id
+  cidr_block        = "10.0.2.0/24"
+  availability_zone = "us-east-1b"
+  tags = { Name = "{{ vpc.label }}-private-subnet" }
+}
+
+resource "aws_route_table" "{{ vpc.id }}_public_rt" {
+  vpc_id = aws_vpc.{{ vpc.id }}.id
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.{{ vpc.id }}_igw.id
+  }
+}
+
+resource "aws_route_table_association" "{{ vpc.id }}_public_assoc" {
+  subnet_id      = aws_subnet.{{ vpc.id }}_public.id
+  route_table_id = aws_route_table.{{ vpc.id }}_public_rt.id
+}
+{% endfor %}
+
+# ---------- Security Groups ----------
+{% if ec2s or albs or rds_instances %}
+# Default SG for compute resources
+resource "aws_security_group" "default_compute_sg" {
+  name   = "default-compute-sg"
+  {% if vpcs %}
+  vpc_id = aws_vpc.{{ vpcs[0].id }}.id
+  {% endif %}
+
+  ingress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"] # tighten in prod
+  }
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+{% endif %}
+
+# ---------- EC2 Instances ----------
+{% for ec2 in ec2s %}
+resource "aws_instance" "{{ ec2.id }}" {
+  ami                    = "ami-0c55b159cbfafe1f0"
+  instance_type          = "t3.micro"
+  {% if ec2.vpc_id %}
+  # Placed inside VPC {{ ec2.vpc_id }} based on bounding box
+  subnet_id              = aws_subnet.{{ ec2.vpc_id }}_public.id
+  {% else %}
+  # Note: No VPC containment detected, assuming default subnets or placing in first VPC
+  {% if vpcs %}
+  subnet_id              = aws_subnet.{{ vpcs[0].id }}_public.id
+  {% endif %}
+  {% endif %}
+  vpc_security_group_ids = [aws_security_group.default_compute_sg.id]
+  tags = { Name = "{{ ec2.label }}" }
+}
+{% endfor %}
+
+# ---------- ALBs ----------
+{% for alb in albs %}
+resource "aws_lb" "{{ alb.id }}" {
+  name               = "{{ alb.label | lower | replace(' ', '-') | truncate(32, True, '') }}"
+  internal           = false
+  load_balancer_type = "application"
+  security_groups    = [aws_security_group.default_compute_sg.id]
+  {% if vpcs %}
+  subnets            = [aws_subnet.{{ vpcs[0].id }}_public.id, aws_subnet.{{ vpcs[0].id }}_private.id]
+  {% endif %}
+}
+
+resource "aws_lb_target_group" "{{ alb.id }}_tg" {
+  name     = "{{ alb.label | lower | replace(' ', '-') | truncate(32, True, '') }}-tg"
+  port     = 80
+  protocol = "HTTP"
+  {% if vpcs %}
+  vpc_id   = aws_vpc.{{ vpcs[0].id }}.id
+  {% endif %}
+}
+
+resource "aws_lb_listener" "{{ alb.id }}_listener" {
+  load_balancer_arn = aws_lb.{{ alb.id }}.arn
+  port              = 80
+  protocol          = "HTTP"
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.{{ alb.id }}_tg.arn
+  }
+}
+
+{% for target in alb.targets %}
+resource "aws_lb_target_group_attachment" "{{ alb.id }}_to_{{ target.id }}" {
+  target_group_arn = aws_lb_target_group.{{ alb.id }}_tg.arn
+  target_id        = aws_instance.{{ target.id }}.id
+  port             = 80
+}
+{% endfor %}
+{% endfor %}
+
+# ---------- RDS ----------
+{% for rds in rds_instances %}
+{% if vpcs %}
+resource "aws_db_subnet_group" "{{ rds.id }}_subnet_group" {
+  name       = "{{ rds.id }}-subnet-group"
+  subnet_ids = [aws_subnet.{{ vpcs[0].id }}_private.id]
+}
+{% endif %}
+
+resource "aws_db_instance" "{{ rds.id }}" {
+  identifier             = "{{ rds.label | lower | replace(' ', '-') | truncate(63, True, '') }}"
+  engine                 = "postgres"
+  engine_version         = "15.4"
+  instance_class         = "db.t3.micro"
+  allocated_storage      = 20
+  {% if vpcs %}
+  db_subnet_group_name   = aws_db_subnet_group.{{ rds.id }}_subnet_group.name
+  {% endif %}
+  vpc_security_group_ids = [aws_security_group.default_compute_sg.id]
+  username               = "admin"
+  password               = "changeme123!" # Pull from var/secrets in prod
+  skip_final_snapshot    = true
+}
+{% endfor %}
+
+# ---------- S3 ----------
+{% for s3 in s3_buckets %}
+resource "aws_s3_bucket" "{{ s3.id }}" {
+  bucket = "{{ s3.label | lower | replace(' ', '-') }}-bucket-{{ range(1000, 9999) | random }}"
+}
+
+resource "aws_s3_bucket_public_access_block" "{{ s3.id }}_block" {
+  bucket                  = aws_s3_bucket.{{ s3.id }}.id
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+{% endfor %}
