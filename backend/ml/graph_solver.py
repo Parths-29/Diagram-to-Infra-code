@@ -146,7 +146,7 @@ class GraphSolver:
             label_info = label_associations.get(det_idx)
             if label_info:
                 label_text = label_info.text
-                subtype = label_info.inferred_type
+                subtype = label_info.inferred_type or self._default_subtype(det.class_name)
                 # If OCR inferred a different class, prefer the OCR hint for subtype
                 # but keep YOLO's class_name for the node type
             else:
