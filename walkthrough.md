@@ -21,4 +21,10 @@ We verified that the ML pipeline (`ocr.py` and `graph_solver.py`) is fully imple
 - **Edge Resolution Mapping:** Implemented a robust `EDGE_MAPPING` table in `backend/generator/engine.py` that resolves arrow connections based on type-pairs. For example, `("alb", "ec2")` translates structurally to an `aws_lb_target_group_attachment`.
 - **Jinja2 Templating:** Created the core `main.tf.j2` template containing the base AWS configurations (VPC, Subnets, EC2, ALB, RDS, S3) supplied by the user.
 
-A full end-to-end generator test verified that taking a dummy `DiagramSpec` (VPC with an EC2, ALB, RDS, and S3 bucket) successfully generates syntactically correct HCL Terraform code!
+A full end-to-end generator test was written to verify the structural robustness of the Jinja templating. The `terraform` CLI (v1.9.5) was installed locally to run real `terraform init` and `terraform validate` commands against the output.
+
+**Tested Edge-Case Scenarios:**
+- **Multiplicity (1-to-Many):** A diagram with 1 ALB connected to 2 EC2 instances correctly resolved edges into multiple `aws_lb_target_group_attachment` resources without silently overwriting properties.
+- **Dangling Nodes:** An orphan EC2 and an orphan RDS instance floating with no VPC connections gracefully compiled into syntactically valid HCL (omitting subnet/vpc parameters instead of crashing).
+
+Both scenarios successfully passed `terraform validate`!
