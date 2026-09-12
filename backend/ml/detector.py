@@ -126,6 +126,7 @@ class DiagramObjectDetector:
             source=img,
             conf=conf,
             iou=self.iou_threshold,
+            agnostic_nms=True,
             save=False,
             verbose=False
         )
